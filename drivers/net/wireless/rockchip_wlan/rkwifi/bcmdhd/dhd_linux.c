@@ -81,7 +81,7 @@
 #endif /* ENABLE_ADAPTIVE_SCHED */
 #include <linux/rtc.h>
 #include <asm/uaccess.h>
-#include <asm/unaligned.h>
+#include <linux/unaligned.h>
 #include <dhd_linux_priv.h>
 #ifdef BCMPCIE
 #if defined(CUSTOMER_HW_ROCKCHIP) && defined(CONFIG_PCIEASPM_ROCKCHIP_WIFI_EXTENSION)
@@ -22422,7 +22422,7 @@ dhd_print_kirqstats(dhd_pub_t *dhd, unsigned int irq_num)
 	bcm_bprintf(&strbuf, "dhd irq %u:", irq_num);
 	for_each_online_cpu(i)
 		bcm_bprintf(&strbuf, "%10u ",
-			desc->kstat_irqs ? *per_cpu_ptr(desc->kstat_irqs, i) : 0);
+			desc->kstat_irqs ? per_cpu_ptr(desc->kstat_irqs, i)->cnt : 0);
 	if (desc->irq_data.chip) {
 		if (desc->irq_data.chip->name)
 			bcm_bprintf(&strbuf, " %8s", desc->irq_data.chip->name);
