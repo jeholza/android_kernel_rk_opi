@@ -21,6 +21,30 @@
 		reset-gpios = <&gpio2 RK_PC5 GPIO_ACTIVE_LOW>;
 	};
 
+	wireless_bluetooth: wireless-bluetooth {
+		compatible = "bluetooth-platdata";
+		uart-rts-gpio = <&gpio4 RK_PD2 GPIO_ACTIVE_HIGH>;
+		bt-reset-gpio = <&gpio4 RK_PD4 GPIO_ACTIVE_LOW>;
+		bt-wake-gpio = <&gpio4 RK_PD5 GPIO_ACTIVE_LOW>;
+		bt-wake-host-gpio = <&gpio0 RK_PA0 GPIO_ACTIVE_LOW>;
+		pinctrl-names = "default", "rts_gpio";
+		pinctrl-0 = <&uart7m0_rtsn &bt_reset_gpio &bt_wake_gpio &bt_irq_gpio>;
+		pinctrl-1 = <&uart7_gpios>;
+		clocks = <&hym8563>;
+		clock-names = "ext_clock";
+		status = "okay";
+	};
+
+	wireless_wlan: wireless-wlan {
+		compatible = "wlan-platdata";
+		wifi_chip_type = "ap6611";
+		wifi-host-wake-gpio = <&gpio0 RK_PB0 GPIO_ACTIVE_LOW>;
+		wifi-poweren-gpio = <&gpio2 RK_PC5 GPIO_ACTIVE_LOW>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&wifi_host_wake_irq>;
+		status = "okay";
+	};
+
 	hdmi0-con {
 		compatible = "hdmi-connector";
 		type = "a";
@@ -30,6 +54,16 @@
 				remote-endpoint = <&hdmi0_out_con>;
 			};
 		};
+	};
+	
+	hdmi0-sound {
+		status = "okay";
+		compatible = "rockchip,hdmi";
+		rockchip,mclk-fs = <0x80>;
+		rockchip,card-name = "rockchip-hdmi0";
+		rockchip,cpu = <&i2s5_8ch>;
+		rockchip,codec = <&hdmi0>;
+		rockchip,jack-det;
 	};
 
 	hdmi1-con {
@@ -41,6 +75,16 @@
 				remote-endpoint = <&hdmi1_out_con>;
 			};
 		};
+	};
+
+	hdmi1-sound {
+		status = "okay";
+		compatible = "rockchip,hdmi";
+		rockchip,mclk-fs = <0x80>;
+		rockchip,card-name = "rockchip-hdmi1";
+		rockchip,cpu = <&i2s6_8ch>;
+		rockchip,codec = <&hdmi1>;
+		rockchip,jack-det;
 	};
 };
 
@@ -122,6 +166,30 @@
 	usb {
 		usb_otg_pwren: usb-otg-pwren {
 			rockchip,pins = <4 RK_PB3 RK_FUNC_GPIO &pcfg_pull_none>;
+		};
+	};
+
+	wireless-bluetooth {
+		uart7_gpios: uart7-gpios {
+			rockchip,pins = <4 RK_PD2 RK_FUNC_GPIO &pcfg_pull_none>;
+		};
+
+		bt_reset_gpio: bt-reset-gpio {
+			rockchip,pins = <4 RK_PD4 RK_FUNC_GPIO &pcfg_pull_none>;
+		};
+
+		bt_wake_gpio: bt-wake-gpio {
+			rockchip,pins = <4 RK_PD5 RK_FUNC_GPIO &pcfg_pull_none>;
+		};
+
+		bt_irq_gpio: bt-irq-gpio {
+			rockchip,pins = <0 RK_PA0 RK_FUNC_GPIO &pcfg_pull_down>;
+		};
+	};
+
+	wireless-wlan {
+		wifi_host_wake_irq: wifi-host-wake-irq {
+			rockchip,pins = <0 RK_PB0 RK_FUNC_GPIO &pcfg_pull_down>;
 		};
 	};
 };
