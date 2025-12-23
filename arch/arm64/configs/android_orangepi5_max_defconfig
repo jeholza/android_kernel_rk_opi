@@ -606,7 +606,7 @@ CONFIG_PCIE_ROCKCHIP_DW_HOST=y
 CONFIG_UEVENT_HELPER=y
 CONFIG_DEVTMPFS=y
 CONFIG_DEVTMPFS_MOUNT=y
-CONFIG_EXTRA_FIRMWARE="regulatory.db regulatory.db.p7s brcm/BCM4345C5.hcd brcm/brcmfmac43456-sdio.bin brcm/brcmfmac43456-sdio.clm_blob brcm/brcmfmac43456-sdio.txt arm/mali/arch10.8/mali_csffw.bin brcm/clm_syn43711a0.blob brcm/fw_syn43711a0_sdio.bin brcm/nvram_ap6611s.txt"
+CONFIG_EXTRA_FIRMWARE="regulatory.db regulatory.db.p7s brcm/BCM4345C5.hcd brcm/brcmfmac43456-sdio.bin brcm/brcmfmac43456-sdio.clm_blob brcm/brcmfmac43456-sdio.txt arm/mali/arch10.8/mali_csffw.bin brcm/clm_syn43711a0.blob brcm/fw_syn43711a0_sdio.bin brcm/nvram_ap6611s.txt brcm/config.txt"
 CONFIG_EXTRA_FIRMWARE_DIR="../vendor/opi/opi3b/proprietary/vendor/firmware"
 # CONFIG_FW_CACHE is not set
 CONFIG_FW_UPLOAD=y
@@ -907,7 +907,7 @@ CONFIG_MWL8K=m
 # CONFIG_WLAN_VENDOR_ZYDAS is not set
 # CONFIG_WLAN_VENDOR_QUANTENNA is not set
 CONFIG_WL_ROCKCHIP=y
-CONFIG_WIFI_BUILD_MODULE=y
+CONFIG_WIFI_LOAD_DRIVER_WHEN_KERNEL_BOOTUP=y
 CONFIG_AP6XXX=y
 CONFIG_BCMDHD_FW_PATH="../vendor/brcm/fw_syn43711a0_sdio.bin"
 CONFIG_BCMDHD_NVRAM_PATH="../vendor/brcm/nvram_ap6611s.txt"
