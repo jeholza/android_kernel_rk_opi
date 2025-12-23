@@ -511,8 +511,8 @@ char config_path[MOD_PARAM_PATHLEN];
 #else
 char firmware_path[MOD_PARAM_PATHLEN] = CONFIG_BCMDHD_FW_PATH;
 char nvram_path[MOD_PARAM_PATHLEN] = CONFIG_BCMDHD_NVRAM_PATH;
-char clm_path[MOD_PARAM_PATHLEN];
-char config_path[MOD_PARAM_PATHLEN];
+char clm_path[MOD_PARAM_PATHLEN] = CONFIG_BCMDHD_CLM_PATH;
+char config_path[MOD_PARAM_PATHLEN] = CONFIG_BCMDHD_CONFIG_PATH;
 #endif /* DHD_LINUX_STD_FW_API */
 char signature_path[MOD_PARAM_PATHLEN];
 #ifdef DHD_UCODE_DOWNLOAD
