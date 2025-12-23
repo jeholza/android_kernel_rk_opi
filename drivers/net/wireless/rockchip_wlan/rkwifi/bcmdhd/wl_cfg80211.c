@@ -21411,6 +21411,13 @@ s32 wl_cfg80211_up(struct net_device *net)
 #ifdef WL_DUAL_STA
 	cfg->inet_ndev = net;
 #endif /* WL_DUAL_STA */
+	
+	/* Validate primary network device is ready before attempting ioctl */
+	if (!cfg || !cfg->wdev || !bcmcfg_to_prmry_ndev(cfg)) {
+		WL_DBG(("Primary network device not ready yet\n"));
+		return -ENODEV;
+	}
+	
 	if ((err = wldev_ioctl_get(bcmcfg_to_prmry_ndev(cfg), WLC_GET_VERSION, &val,
 		sizeof(int)) < 0)) {
 		WL_ERR(("WLC_GET_VERSION failed, err=%d\n", err));

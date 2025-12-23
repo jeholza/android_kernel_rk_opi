@@ -519,7 +519,7 @@ char signature_path[MOD_PARAM_PATHLEN];
 char ucode_path[MOD_PARAM_PATHLEN];
 #endif /* DHD_UCODE_DOWNLOAD */
 
-module_param_string(clm_path, clm_path, MOD_PARAM_PATHLEN, 0660);
+module_param_string(clm_path, clm_path, MOD_PARAM_PATHLEN, 0664);
 
 /* backup buffer for firmware and nvram path */
 char fw_bak_path[MOD_PARAM_PATHLEN];
@@ -531,7 +531,7 @@ module_param_string(info_string, info_string, MOD_PARAM_INFOLEN, 0444);
 
 #ifdef SYNA_SAR_CUSTOMER_PARAMETER
 char config_sar_path[MOD_PARAM_PATHLEN] = CONFIG_BCMDHD_CONFIG_SAR_PATH;
-module_param_string(config_sar_path, config_sar_path, MOD_PARAM_PATHLEN, 0660);
+module_param_string(config_sar_path, config_sar_path, MOD_PARAM_PATHLEN, 0664);
 #endif /* SYNA_SAR_CUSTOMER_PARAMETER */
 int op_mode = 0;
 int disable_proptx = 0;
@@ -611,12 +611,12 @@ module_param(dhd_arp_mode, uint, 0);
 /* Disable Prop tx */
 module_param(disable_proptx, int, 0644);
 /* load firmware and/or nvram values from the filesystem */
-module_param_string(firmware_path, firmware_path, MOD_PARAM_PATHLEN, 0660);
-module_param_string(nvram_path, nvram_path, MOD_PARAM_PATHLEN, 0660);
-module_param_string(config_path, config_path, MOD_PARAM_PATHLEN, 0);
-module_param_string(signature_path, signature_path, MOD_PARAM_PATHLEN, 0660);
+module_param_string(firmware_path, firmware_path, MOD_PARAM_PATHLEN, 0664);
+module_param_string(nvram_path, nvram_path, MOD_PARAM_PATHLEN, 0664);
+module_param_string(config_path, config_path, MOD_PARAM_PATHLEN, 0664);
+module_param_string(signature_path, signature_path, MOD_PARAM_PATHLEN, 0664);
 #ifdef DHD_UCODE_DOWNLOAD
-module_param_string(ucode_path, ucode_path, MOD_PARAM_PATHLEN, 0660);
+module_param_string(ucode_path, ucode_path, MOD_PARAM_PATHLEN, 0664);
 #endif /* DHD_UCODE_DOWNLOAD */
 
 /* wl event forwarding */
