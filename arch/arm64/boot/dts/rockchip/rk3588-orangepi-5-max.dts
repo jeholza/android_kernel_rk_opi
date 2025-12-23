@@ -23,10 +23,10 @@
 
 	wireless_bluetooth: wireless-bluetooth {
 		compatible = "bluetooth-platdata";
-		uart-rts-gpio = <&gpio4 RK_PD2 GPIO_ACTIVE_HIGH>;
-		bt-reset-gpio = <&gpio4 RK_PD4 GPIO_ACTIVE_LOW>;
-		bt-wake-gpio = <&gpio4 RK_PD5 GPIO_ACTIVE_LOW>;
-		bt-wake-host-gpio = <&gpio0 RK_PA0 GPIO_ACTIVE_LOW>;
+		uart-rts-gpio = <&gpio4 RK_PC2 GPIO_ACTIVE_LOW>;
+		bt-reset-gpio = <&gpio4 RK_PC4 GPIO_ACTIVE_HIGH>;
+		bt-wake-gpio = <&gpio4 RK_PC5 GPIO_ACTIVE_HIGH>;
+		bt-wake-host-gpio = <&gpio0 RK_PA0 GPIO_ACTIVE_HIGH>;
 		pinctrl-names = "default", "rts_gpio";
 		pinctrl-0 = <&uart7m0_rtsn &bt_reset_gpio &bt_wake_gpio &bt_irq_gpio>;
 		pinctrl-1 = <&uart7_gpios>;
@@ -38,8 +38,8 @@
 	wireless_wlan: wireless-wlan {
 		compatible = "wlan-platdata";
 		wifi_chip_type = "ap6611";
-		wifi-host-wake-gpio = <&gpio0 RK_PB0 GPIO_ACTIVE_LOW>;
-		wifi-poweren-gpio = <&gpio2 RK_PC5 GPIO_ACTIVE_LOW>;
+		wifi-host-wake-gpio = <&gpio0 RK_PB0 GPIO_ACTIVE_HIGH>;
+		wifi-poweren-gpio = <&gpio2 RK_PC5 GPIO_ACTIVE_HIGH>;
 		pinctrl-names = "default";
 		pinctrl-0 = <&wifi_host_wake_irq>;
 		status = "okay";
@@ -171,15 +171,15 @@
 
 	wireless-bluetooth {
 		uart7_gpios: uart7-gpios {
-			rockchip,pins = <4 RK_PD2 RK_FUNC_GPIO &pcfg_pull_none>;
+			rockchip,pins = <4 RK_PC2 RK_FUNC_GPIO &pcfg_pull_none>;
 		};
 
 		bt_reset_gpio: bt-reset-gpio {
-			rockchip,pins = <4 RK_PD4 RK_FUNC_GPIO &pcfg_pull_none>;
+			rockchip,pins = <4 RK_PC4 RK_FUNC_GPIO &pcfg_pull_none>;
 		};
 
 		bt_wake_gpio: bt-wake-gpio {
-			rockchip,pins = <4 RK_PD5 RK_FUNC_GPIO &pcfg_pull_none>;
+			rockchip,pins = <4 RK_PC5 RK_FUNC_GPIO &pcfg_pull_none>;
 		};
 
 		bt_irq_gpio: bt-irq-gpio {
@@ -220,6 +220,7 @@
 	cap-sdio-irq;
 	keep-power-in-suspend;
 	non-removable;
+	max-frequency = <150000000>;
 	sd-uhs-sdr104;
 	mmc-pwrseq = <&sdio_pwrseq>;
 };
