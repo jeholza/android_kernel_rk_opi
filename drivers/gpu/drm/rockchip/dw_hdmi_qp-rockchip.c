@@ -72,6 +72,15 @@
 #define RK3588_HDMI1_LEVEL_INT		BIT(24)
 #define RK3588_GRF_VO1_CON3		0x000c
 #define RK3588_GRF_VO1_CON6		0x0018
+/* VO1 GRF color format (bits 0-3) and depth (bits 4-7) - must match 5.10 set_grf_cfg */
+#define RK3588_COLOR_FORMAT_MASK	0xf
+#define RK3588_RGB			0
+#define RK3588_YUV422			0x1
+#define RK3588_YUV444			0x2
+#define RK3588_YUV420			0x3
+#define RK3588_COLOR_DEPTH_MASK		(0xf << 4)
+#define RK3588_8BPC			0
+#define RK3588_10BPC			(0x6 << 4)
 #define RK3588_SCLIN_MASK		BIT(9)
 #define RK3588_SDAIN_MASK		BIT(10)
 #define RK3588_MODE_MASK		BIT(11)
@@ -357,7 +366,13 @@ static void dw_hdmi_qp_rk3588_io_init(struct rockchip_hdmi_qp *hdmi)
 {
 	u32 val;
 
-	val = HIWORD_UPDATE(RK3588_SCLIN_MASK, RK3588_SCLIN_MASK) |
+	/* Program color format and depth (same as 5.10 rk3588_set_grf_cfg).
+	 * Default to RGB 8bpc so the HDMI block is in a known state; without
+	 * this the hardware may show wrong colours (e.g. pink tint).
+	 */
+	val = HIWORD_UPDATE(RK3588_RGB, RK3588_COLOR_FORMAT_MASK) |
+	      HIWORD_UPDATE(RK3588_8BPC, RK3588_COLOR_DEPTH_MASK) |
+	      HIWORD_UPDATE(RK3588_SCLIN_MASK, RK3588_SCLIN_MASK) |
 	      HIWORD_UPDATE(RK3588_SDAIN_MASK, RK3588_SDAIN_MASK) |
 	      HIWORD_UPDATE(RK3588_MODE_MASK, RK3588_MODE_MASK) |
 	      HIWORD_UPDATE(RK3588_I2S_SEL_MASK, RK3588_I2S_SEL_MASK);
