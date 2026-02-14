@@ -55,7 +55,7 @@
 			};
 		};
 	};
-	
+
 	hdmi0-sound {
 		status = "okay";
 		compatible = "rockchip,hdmi";
@@ -104,10 +104,6 @@
 	};
 };
 
-&hdmi0_sound {
-	status = "okay";
-};
-
 &hdmi1 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&hdmim0_tx1_cec &hdmim0_tx1_hpd
@@ -125,10 +121,6 @@
 	hdmi1_out_con: endpoint {
 		remote-endpoint = <&hdmi1_con_in>;
 	};
-};
-
-&hdmi1_sound {
-	status = "okay";
 };
 
 &hdptxphy0 {
