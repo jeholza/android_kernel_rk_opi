@@ -21,18 +21,27 @@
 		reset-gpios = <&gpio2 RK_PC5 GPIO_ACTIVE_LOW>;
 	};
 
+	/*
+	 * wireless-bluetooth (bluetooth-platdata): used only by rfkill_bt.
+	 * rfkill_bt finds this node by compatible and creates a platform device from it
+	 * (it does not respect status="disabled"), then uses bt-reset-gpio, bt-wake-gpio,
+	 * bt-wake-host-gpio for rfkill block/unblock and bluesleep.
+	 * No uart-rts-gpio / rts_gpio here: RTS is owned by &uart7 (uart7m0_rtsn on GPIO4 PC2).
+	 *
+	 * Actual BT transport and power sequencing are under &uart7 { bluetooth { } }
+	 * (brcm,bcm4345c5), which hci_uart_bcm uses (device-wakeup-gpios, shutdown-gpios).
+	 * Same pins, different property names for the two drivers.
+	 */
 	wireless_bluetooth: wireless-bluetooth {
 		compatible = "bluetooth-platdata";
-		uart-rts-gpio = <&gpio4 RK_PC2 GPIO_ACTIVE_LOW>;
 		bt-reset-gpio = <&gpio4 RK_PC4 GPIO_ACTIVE_HIGH>;
 		bt-wake-gpio = <&gpio4 RK_PC5 GPIO_ACTIVE_HIGH>;
 		bt-wake-host-gpio = <&gpio0 RK_PA0 GPIO_ACTIVE_HIGH>;
-		pinctrl-names = "default", "rts_gpio";
-		pinctrl-0 = <&uart7m0_rtsn &bt_reset_gpio &bt_wake_gpio &bt_irq_gpio>;
-		pinctrl-1 = <&uart7_gpios>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&bt_reset_gpio &bt_wake_gpio &bt_irq_gpio>;
 		clocks = <&hym8563>;
 		clock-names = "ext_clock";
-		status = "okay";
+		status = "disabled";
 	};
 
 	wireless_wlan: wireless-wlan {
@@ -161,11 +170,8 @@
 		};
 	};
 
+	/* RTS (PC2) is owned by &uart7 via uart7m0_rtsn; do not define uart7_gpios here or wireless-bluetooth's default pinctrl would claim PC2 and conflict. */
 	wireless-bluetooth {
-		uart7_gpios: uart7-gpios {
-			rockchip,pins = <4 RK_PC2 RK_FUNC_GPIO &pcfg_pull_none>;
-		};
-
 		bt_reset_gpio: bt-reset-gpio {
 			rockchip,pins = <4 RK_PC4 RK_FUNC_GPIO &pcfg_pull_none>;
 		};
@@ -215,4 +221,34 @@
 	max-frequency = <150000000>;
 	sd-uhs-sdr104;
 	mmc-pwrseq = <&sdio_pwrseq>;
+};
+
+/* AP6611 Bluetooth over UART7 (hci_bcm/btbcm); WiFi remains on SDIO above.
+ * UART pins (from rk3588-extra-pinctrl.dtsi):
+ *   TX  = uart7m0_xfer  → GPIO2 PB5 (host out)
+ *   RX  = uart7m0_xfer  → GPIO2 PB4 (host in)
+ *   RTS = uart7m0_rtsn  → GPIO4 PC2 (host out)
+ *   CTS = uart7m0_ctsn  → GPIO4 PC6 (host in, schematic GPIO4_C6)
+ */
+&uart7 {
+	status = "okay";
+	pinctrl-names = "default";
+	pinctrl-0 = <&uart7m0_xfer &uart7m0_rtsn &uart7m0_ctsn>;
+
+	/* Reference DTBs (dtb-5.10 / dtb-6.1) have no serdev BT node and no BT baud; only fiq-debugger has rockchip,baudrate (1.5M). 3M is standard BCM UART operational rate. */
+	bluetooth {
+		compatible = "brcm,bcm4345c5";
+		clocks = <&hym8563>;
+		clock-names = "txco";
+		max-speed = <3000000>;
+		interrupt-parent = <&gpio0>;
+		interrupts = <RK_PA0 IRQ_TYPE_LEVEL_HIGH>;
+		interrupt-names = "host-wakeup";
+		device-wakeup-gpios = <&gpio4 RK_PC5 GPIO_ACTIVE_HIGH>; /* BT_WAKE (host→device: keep awake) */
+		shutdown-gpios = <&gpio4 RK_PC4 GPIO_ACTIVE_HIGH>;     /* BT_RST_N (power on + release reset when high) */
+		pinctrl-names = "default";
+		pinctrl-0 = <&bt_reset_gpio &bt_wake_gpio &bt_irq_gpio>;
+		/* interrupts = BT_HOST_WAKE (device→host: wake host) on PA0 */
+		status = "okay";
+	};
 };

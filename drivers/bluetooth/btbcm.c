@@ -79,6 +79,7 @@ int btbcm_check_bdaddr(struct hci_dev *hdev)
 	struct hci_rp_read_bd_addr *bda;
 	struct sk_buff *skb;
 
+	bt_dev_info(hdev, "BCM: btbcm_check_bdaddr");
 	skb = __hci_cmd_sync(hdev, HCI_OP_READ_BD_ADDR, 0, NULL,
 			     HCI_INIT_TIMEOUT);
 	if (IS_ERR(skb)) {
@@ -139,8 +140,8 @@ int btbcm_check_bdaddr(struct hci_dev *hdev)
 		}
 	}
 
+	bt_dev_info(hdev, "BCM: btbcm_check_bdaddr done %pMR", &bda->bdaddr);
 	kfree_skb(skb);
-
 	return 0;
 }
 EXPORT_SYMBOL_GPL(btbcm_check_bdaddr);
@@ -150,6 +151,7 @@ int btbcm_set_bdaddr(struct hci_dev *hdev, const bdaddr_t *bdaddr)
 	struct sk_buff *skb;
 	int err;
 
+	bt_dev_info(hdev, "BCM: btbcm_set_bdaddr %pMR", bdaddr);
 	skb = __hci_cmd_sync(hdev, 0xfc01, 6, bdaddr, HCI_INIT_TIMEOUT);
 	if (IS_ERR(skb)) {
 		err = PTR_ERR(skb);
@@ -217,6 +219,7 @@ int btbcm_patchram(struct hci_dev *hdev, const struct firmware *fw)
 	u16 opcode;
 	int err = 0;
 
+	bt_dev_info(hdev, "BCM: btbcm_patchram size %zu", fw->size);
 	/* Start Download */
 	skb = __hci_cmd_sync(hdev, 0xfc2e, 0, NULL, HCI_INIT_TIMEOUT);
 	if (IS_ERR(skb)) {
@@ -229,7 +232,7 @@ int btbcm_patchram(struct hci_dev *hdev, const struct firmware *fw)
 
 	/* 50 msec delay after Download Minidrv completes */
 	msleep(50);
-
+	bt_dev_info(hdev, "BCM: patchram sending %zu bytes of commands", fw->size);
 	fw_ptr = fw->data;
 	fw_size = fw->size;
 
@@ -265,7 +268,7 @@ int btbcm_patchram(struct hci_dev *hdev, const struct firmware *fw)
 
 	/* 250 msec delay after Launch Ram completes */
 	msleep(250);
-
+	bt_dev_info(hdev, "BCM: btbcm_patchram done");
 done:
 	return err;
 }
@@ -275,6 +278,9 @@ static int btbcm_reset(struct hci_dev *hdev)
 {
 	struct sk_buff *skb;
 
+	bt_dev_info(hdev, "BCM: btbcm_reset");
+	/* Short delay so UART line is stable before first HCI command */
+	msleep(50);
 	skb = __hci_cmd_sync(hdev, HCI_OP_RESET, 0, NULL, HCI_INIT_TIMEOUT);
 	if (IS_ERR(skb)) {
 		int err = PTR_ERR(skb);
@@ -286,7 +292,7 @@ static int btbcm_reset(struct hci_dev *hdev)
 
 	/* 100 msec delay for module to complete reset process */
 	msleep(100);
-
+	bt_dev_info(hdev, "BCM: btbcm_reset done");
 	return 0;
 }
 
@@ -294,6 +300,7 @@ static struct sk_buff *btbcm_read_local_name(struct hci_dev *hdev)
 {
 	struct sk_buff *skb;
 
+	bt_dev_info(hdev, "BCM: btbcm_read_local_name");
 	skb = __hci_cmd_sync(hdev, HCI_OP_READ_LOCAL_NAME, 0, NULL,
 			     HCI_INIT_TIMEOUT);
 	if (IS_ERR(skb)) {
@@ -315,6 +322,7 @@ static struct sk_buff *btbcm_read_local_version(struct hci_dev *hdev)
 {
 	struct sk_buff *skb;
 
+	bt_dev_info(hdev, "BCM: btbcm_read_local_version");
 	skb = __hci_cmd_sync(hdev, HCI_OP_READ_LOCAL_VERSION, 0, NULL,
 			     HCI_INIT_TIMEOUT);
 	if (IS_ERR(skb)) {
@@ -328,7 +336,7 @@ static struct sk_buff *btbcm_read_local_version(struct hci_dev *hdev)
 		kfree_skb(skb);
 		return ERR_PTR(-EIO);
 	}
-
+	bt_dev_info(hdev, "BCM: read_local_version ok");
 	return skb;
 }
 
@@ -336,6 +344,7 @@ static struct sk_buff *btbcm_read_verbose_config(struct hci_dev *hdev)
 {
 	struct sk_buff *skb;
 
+	bt_dev_info(hdev, "BCM: btbcm_read_verbose_config");
 	skb = __hci_cmd_sync(hdev, 0xfc79, 0, NULL, HCI_INIT_TIMEOUT);
 	if (IS_ERR(skb)) {
 		bt_dev_err(hdev, "BCM: Read verbose config info failed (%ld)",
@@ -442,6 +451,7 @@ static int btbcm_read_info(struct hci_dev *hdev)
 {
 	struct sk_buff *skb;
 
+	bt_dev_info(hdev, "BCM: btbcm_read_info");
 	/* Read Verbose Config Version Info */
 	skb = btbcm_read_verbose_config(hdev);
 	if (IS_ERR(skb))
@@ -502,6 +512,7 @@ static const struct bcm_subver_table bcm_uart_subver_table[] = {
 	{ 0x4606, "BCM4324B5"	},	/* 002.006.006 */
 	{ 0x6109, "BCM4335C0"	},	/* 003.001.009 */
 	{ 0x610c, "BCM4354"	},	/* 003.001.012 */
+	{ 0x211e, "SYN43711A0"	},	/* 001.001.030 AP6611, firmware SYN43711A0.hcd */
 	{ 0x2122, "BCM4343A0"	},	/* 001.001.034 */
 	{ 0x2209, "BCM43430A1"  },	/* 001.002.009 */
 	{ 0x6119, "BCM4345C0"	},	/* 003.001.025 */
@@ -557,7 +568,7 @@ static const char *btbcm_get_board_name(struct device *dev)
 		return NULL;
 
 	strreplace(board_type, '/', '-');
-
+	dev_info(dev, "BCM: board_name from DT: %s", board_type);
 	return board_type;
 #else
 	return NULL;
@@ -578,7 +589,12 @@ int btbcm_initialize(struct hci_dev *hdev, bool *fw_load_done, bool use_autobaud
 	const struct firmware *fw;
 	int i, err;
 
+	/* Always log so we can confirm btbcm is reached (visible even if log level filters info) */
+	bt_dev_err(hdev, "BCM: btbcm_initialize entered");
+	bt_dev_info(hdev, "BCM: btbcm_initialize fw_load_done=%d use_autobaud=%d",
+		    *fw_load_done, use_autobaud_mode);
 	board_name = btbcm_get_board_name(&hdev->dev);
+	bt_dev_info(hdev, "BCM: board_name %s", board_name ? board_name : "(null)");
 
 	/* Reset */
 	err = btbcm_reset(hdev);
@@ -593,6 +609,7 @@ int btbcm_initialize(struct hci_dev *hdev, bool *fw_load_done, bool use_autobaud
 	ver = (struct hci_rp_read_local_version *)skb->data;
 	rev = le16_to_cpu(ver->hci_rev);
 	subver = le16_to_cpu(ver->lmp_subver);
+	bt_dev_info(hdev, "BCM: subver 0x%04x rev 0x%04x", subver, rev);
 	kfree_skb(skb);
 
 	/* Read controller information */
@@ -603,6 +620,7 @@ int btbcm_initialize(struct hci_dev *hdev, bool *fw_load_done, bool use_autobaud
 	}
 
 	if (!use_autobaud_mode) {
+		bt_dev_info(hdev, "BCM: reading controller features and local name");
 		err = btbcm_print_controller_features(hdev);
 		if (err)
 			return err;
@@ -612,6 +630,7 @@ int btbcm_initialize(struct hci_dev *hdev, bool *fw_load_done, bool use_autobaud
 			return err;
 	}
 
+	bt_dev_info(hdev, "BCM: bus %s", hdev->bus == HCI_USB ? "USB" : "UART");
 	bcm_subver_table = (hdev->bus == HCI_USB) ? bcm_usb_subver_table :
 						    bcm_uart_subver_table;
 
@@ -666,7 +685,9 @@ int btbcm_initialize(struct hci_dev *hdev, bool *fw_load_done, bool use_autobaud
 		 "brcm/BCM%s.hcd", postfix);
 	fw_name_count++;
 
+	bt_dev_info(hdev, "BCM: trying %d firmware names", fw_name_count);
 	for (i = 0; i < fw_name_count; i++) {
+		bt_dev_info(hdev, "BCM: firmware_request '%s'", fw_name[i]);
 		err = firmware_request_nowarn(&fw, fw_name[i], &hdev->dev);
 		if (err == 0) {
 			bt_dev_info(hdev, "%s '%s' Patch",
@@ -674,9 +695,11 @@ int btbcm_initialize(struct hci_dev *hdev, bool *fw_load_done, bool use_autobaud
 			*fw_load_done = true;
 			break;
 		}
+		bt_dev_info(hdev, "BCM: firmware_request '%s' failed %d", fw_name[i], err);
 	}
 
 	if (*fw_load_done) {
+		bt_dev_info(hdev, "BCM: applying patchram");
 		err = btbcm_patchram(hdev, fw);
 		if (err)
 			bt_dev_info(hdev, "BCM: Patch failed (%d)", err);
@@ -689,6 +712,7 @@ int btbcm_initialize(struct hci_dev *hdev, bool *fw_load_done, bool use_autobaud
 	}
 
 	kfree(fw_name);
+	bt_dev_info(hdev, "BCM: btbcm_initialize done");
 	return 0;
 }
 EXPORT_SYMBOL_GPL(btbcm_initialize);
@@ -697,6 +721,7 @@ int btbcm_finalize(struct hci_dev *hdev, bool *fw_load_done, bool use_autobaud_m
 {
 	int err;
 
+	bt_dev_info(hdev, "BCM: btbcm_finalize fw_load_done=%d", *fw_load_done);
 	/* Re-initialize if necessary */
 	if (*fw_load_done) {
 		err = btbcm_initialize(hdev, fw_load_done, use_autobaud_mode);
@@ -707,7 +732,7 @@ int btbcm_finalize(struct hci_dev *hdev, bool *fw_load_done, bool use_autobaud_m
 	btbcm_check_bdaddr(hdev);
 
 	set_bit(HCI_QUIRK_STRICT_DUPLICATE_FILTER, &hdev->quirks);
-
+	bt_dev_info(hdev, "BCM: btbcm_finalize done");
 	return 0;
 }
 EXPORT_SYMBOL_GPL(btbcm_finalize);
@@ -718,12 +743,14 @@ int btbcm_setup_patchram(struct hci_dev *hdev)
 	bool use_autobaud_mode = false;
 	int err;
 
+	bt_dev_info(hdev, "BCM: btbcm_setup_patchram");
 	/* Initialize */
 	err = btbcm_initialize(hdev, &fw_load_done, use_autobaud_mode);
 	if (err)
 		return err;
 
 	/* Re-initialize after loading Patch */
+	bt_dev_info(hdev, "BCM: btbcm_setup_patchram calling finalize");
 	return btbcm_finalize(hdev, &fw_load_done, use_autobaud_mode);
 }
 EXPORT_SYMBOL_GPL(btbcm_setup_patchram);

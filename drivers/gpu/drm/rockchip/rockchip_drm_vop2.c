@@ -1664,7 +1664,8 @@ static void vop2_crtc_atomic_enable(struct drm_crtc *crtc,
 
 	vcstate->yuv_overlay = is_yuv_output(vcstate->bus_format);
 
-	vop2_crtc_enable_irq(vp, VP_INT_POST_BUF_EMPTY);
+	/* POST_BUF_EMPTY can fire spuriously on RK3588; no recovery is implemented. */
+	/* vop2_crtc_enable_irq(vp, VP_INT_POST_BUF_EMPTY); */
 
 	polflags = 0;
 	if (vcstate->bus_flags & DRM_BUS_FLAG_PIXDATA_DRIVE_NEGEDGE)

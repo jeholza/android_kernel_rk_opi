@@ -187,7 +187,7 @@ static int bcm_set_baudrate(struct hci_uart *hu, unsigned int speed)
 
 		clock.type = BCM_UART_CLOCK_48MHZ;
 
-		bt_dev_dbg(hdev, "Set Controller clock (%d)", clock.type);
+		bt_dev_info(hdev, "Set Controller clock (%d)", clock.type);
 
 		/* This Broadcom specific command changes the UART's controller
 		 * clock for baud rate > 3000000.
@@ -203,7 +203,7 @@ static int bcm_set_baudrate(struct hci_uart *hu, unsigned int speed)
 		kfree_skb(skb);
 	}
 
-	bt_dev_dbg(hdev, "Set Controller UART speed to %d bit/s", speed);
+	bt_dev_info(hdev, "Set Controller UART speed to %d bit/s", speed);
 
 	param.zero = cpu_to_le16(0);
 	param.baud_rate = cpu_to_le32(speed);
@@ -297,8 +297,8 @@ static int bcm_gpio_set_power(struct bcm_device *dev, bool powered)
 					       dev->supplies);
 	}
 
-	/* wait for device to power on and come out of reset */
-	usleep_range(100000, 120000);
+	/* wait for device to power on and come out of reset (AP6611/BCM4345 needs ~150ms+) */
+	usleep_range(150000, 200000);
 
 	dev->res_enabled = powered;
 
@@ -323,7 +323,7 @@ static irqreturn_t bcm_host_wake(int irq, void *data)
 {
 	struct bcm_device *bdev = data;
 
-	bt_dev_dbg(bdev, "Host wake IRQ");
+	bt_dev_info(bdev, "Host wake IRQ");
 
 	pm_runtime_get(bdev->dev);
 	pm_runtime_mark_last_busy(bdev->dev);
@@ -406,7 +406,7 @@ static int bcm_setup_sleep(struct hci_uart *hu)
 	}
 	kfree_skb(skb);
 
-	bt_dev_dbg(hu->hdev, "Set Sleep Parameters VSC succeeded");
+	bt_dev_info(hu->hdev, "Set Sleep Parameters VSC succeeded");
 
 	return 0;
 }
@@ -444,7 +444,7 @@ static int bcm_open(struct hci_uart *hu)
 	struct list_head *p;
 	int err;
 
-	bt_dev_dbg(hu->hdev, "hu %p", hu);
+	bt_dev_info(hu->hdev, "hu %p", hu);
 
 	if (!hci_uart_has_flow_control(hu))
 		return -EOPNOTSUPP;
@@ -502,12 +502,14 @@ out:
 			hu->oper_speed = bcm->dev->oper_speed;
 
 		err = bcm_gpio_set_power(bcm->dev, true);
+		if (err)
+			goto err_unset_hu;
+
+		/* Let the chip stabilize after power-on before any HCI traffic (AP6611 needs 200ms+) */
+		msleep(200);
 
 		if (bcm->dev->drive_rts_on_open)
 			hci_uart_set_flow_control(hu, false);
-
-		if (err)
-			goto err_unset_hu;
 	}
 
 	mutex_unlock(&bcm_device_lock);
@@ -530,7 +532,7 @@ static int bcm_close(struct hci_uart *hu)
 	struct bcm_device *bdev = NULL;
 	int err;
 
-	bt_dev_dbg(hu->hdev, "hu %p", hu);
+	bt_dev_info(hu->hdev, "hu %p", hu);
 
 	/* Protect bcm->dev against removal of the device or driver */
 	mutex_lock(&bcm_device_lock);
@@ -571,7 +573,7 @@ static int bcm_flush(struct hci_uart *hu)
 {
 	struct bcm_data *bcm = hu->priv;
 
-	bt_dev_dbg(hu->hdev, "hu %p", hu);
+	bt_dev_info(hu->hdev, "hu %p", hu);
 
 	skb_queue_purge(&bcm->txq);
 
@@ -586,7 +588,9 @@ static int bcm_setup(struct hci_uart *hu)
 	unsigned int speed;
 	int err;
 
-	bt_dev_dbg(hu->hdev, "hu %p", hu);
+	/* Always log so we can confirm setup is reached (btbcm runs from here) */
+	bt_dev_err(hu->hdev, "BCM: bcm_setup entered");
+	bt_dev_info(hu->hdev, "BCM: bcm_setup hu %p", hu);
 
 	hu->hdev->set_diag = bcm_set_diag;
 	hu->hdev->set_bdaddr = btbcm_set_bdaddr;
@@ -723,7 +727,7 @@ static int bcm_enqueue(struct hci_uart *hu, struct sk_buff *skb)
 {
 	struct bcm_data *bcm = hu->priv;
 
-	bt_dev_dbg(hu->hdev, "hu %p skb %p", hu, skb);
+	bt_dev_info(hu->hdev, "hu %p skb %p", hu, skb);
 
 	/* Prepend skb with frame type */
 	memcpy(skb_push(skb, 1), &hci_skb_pkt_type(skb), 1);
@@ -764,7 +768,7 @@ static int bcm_suspend_device(struct device *dev)
 	struct bcm_device *bdev = dev_get_drvdata(dev);
 	int err;
 
-	bt_dev_dbg(bdev, "");
+	bt_dev_info(bdev, "");
 
 	if (!bdev->is_suspended && bdev->hu) {
 		hci_uart_set_flow_control(bdev->hu, true);
@@ -783,7 +787,7 @@ static int bcm_suspend_device(struct device *dev)
 		return -EBUSY;
 	}
 
-	bt_dev_dbg(bdev, "suspend, delaying 15 ms");
+	bt_dev_info(bdev, "suspend, delaying 15 ms");
 	msleep(15);
 
 	return 0;
@@ -794,7 +798,7 @@ static int bcm_resume_device(struct device *dev)
 	struct bcm_device *bdev = dev_get_drvdata(dev);
 	int err;
 
-	bt_dev_dbg(bdev, "");
+	bt_dev_info(bdev, "");
 
 	err = bdev->set_device_wakeup(bdev, true);
 	if (err) {
@@ -802,7 +806,7 @@ static int bcm_resume_device(struct device *dev)
 		return err;
 	}
 
-	bt_dev_dbg(bdev, "resume, delaying 15 ms");
+	bt_dev_info(bdev, "resume, delaying 15 ms");
 	msleep(15);
 
 	/* When this executes, the device has woken up already */
@@ -823,7 +827,7 @@ static int bcm_suspend(struct device *dev)
 	struct bcm_device *bdev = dev_get_drvdata(dev);
 	int error;
 
-	bt_dev_dbg(bdev, "suspend: is_suspended %d", bdev->is_suspended);
+	bt_dev_info(bdev, "suspend: is_suspended %d", bdev->is_suspended);
 
 	/*
 	 * When used with a device instantiated as platform_device, bcm_suspend
@@ -842,7 +846,7 @@ static int bcm_suspend(struct device *dev)
 	if (device_may_wakeup(dev) && bdev->irq > 0) {
 		error = enable_irq_wake(bdev->irq);
 		if (!error)
-			bt_dev_dbg(bdev, "BCM irq: enabled");
+			bt_dev_info(bdev, "BCM irq: enabled");
 	}
 
 unlock:
@@ -857,7 +861,7 @@ static int bcm_resume(struct device *dev)
 	struct bcm_device *bdev = dev_get_drvdata(dev);
 	int err = 0;
 
-	bt_dev_dbg(bdev, "resume: is_suspended %d", bdev->is_suspended);
+	bt_dev_info(bdev, "resume: is_suspended %d", bdev->is_suspended);
 
 	/*
 	 * When used with a device instantiated as platform_device, bcm_resume
@@ -872,7 +876,7 @@ static int bcm_resume(struct device *dev)
 
 	if (device_may_wakeup(dev) && bdev->irq > 0) {
 		disable_irq_wake(bdev->irq);
-		bt_dev_dbg(bdev, "BCM irq: disabled");
+		bt_dev_info(bdev, "BCM irq: disabled");
 	}
 
 	err = bcm_resume_device(dev);
@@ -1584,12 +1588,17 @@ static struct bcm_device_data cyw55572_device_data = {
 	.max_autobaud_speed = 921600,
 };
 
+/* BCM4345C5 (e.g. AP6611): avoid switching baud before setup; chip at 115200 for reset/fw. */
+static struct bcm_device_data bcm4345c5_device_data = {
+	.no_early_set_baudrate = true,
+};
+
 static const struct of_device_id bcm_bluetooth_of_match[] = {
 	{ .compatible = "brcm,bcm20702a1" },
 	{ .compatible = "brcm,bcm4329-bt" },
 	{ .compatible = "brcm,bcm4330-bt" },
 	{ .compatible = "brcm,bcm4334-bt" },
-	{ .compatible = "brcm,bcm4345c5" },
+	{ .compatible = "brcm,bcm4345c5", .data = &bcm4345c5_device_data },
 	{ .compatible = "brcm,bcm43430a0-bt" },
 	{ .compatible = "brcm,bcm43430a1-bt" },
 	{ .compatible = "brcm,bcm43438-bt", .data = &bcm43438_device_data },

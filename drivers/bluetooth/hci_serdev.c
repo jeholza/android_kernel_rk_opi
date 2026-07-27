@@ -210,8 +210,10 @@ static int hci_uart_setup(struct hci_dev *hdev)
 			serdev_device_set_baudrate(hu->serdev, speed);
 	}
 
-	if (hu->proto->setup)
+	if (hu->proto->setup) {
+		bt_dev_err(hdev, "hci_uart_setup calling proto->setup");
 		return hu->proto->setup(hu);
+	}
 
 	if (!test_bit(HCI_UART_VND_DETECT, &hu->hdev_flags))
 		return 0;
